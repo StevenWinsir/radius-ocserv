@@ -1,6 +1,6 @@
 #!/bin/bash
 function set_shell_input1() {
-	sqladmin=0p0o0i0900
+	sqladmin=F8yX4eZNd7W26funF4
 	yum install lynx -y
 	public_ip=`lynx --source www.monip.org | sed -nre 's/^.* (([0-9]{1,3}\.){3}[0-9]{1,3}).*$/\1/p'`
 	#解决ssh访问慢的问题,可以安装完脚本后手工重启ssh
@@ -18,8 +18,8 @@ function set_mysql2() {
 	sleep 3
 	mysqladmin -u root password ""${sqladmin}""
 	mysql -uroot -p${sqladmin} -e "create database radius;"
-	mysql -uroot -p${sqladmin} -e "grant all privileges on radius.* to radius@localhost identified by 'p0radius_0p';"
-	mysql -uradius -p'p0radius_0p' radius < /etc/raddb/mods-config/sql/main/mysql/schema.sql  
+	mysql -uroot -p${sqladmin} -e "grant all privileges on radius.* to radius@localhost identified by '14WJnD8eMF6bBq';"
+	mysql -uradius -p'14WJnD8eMF6bBq' radius < /etc/raddb/mods-config/sql/main/mysql/schema.sql  
 	systemctl restart mariadb
 }
 
@@ -40,7 +40,7 @@ function set_freeradius3(){
 	sed -i '/port = 3306/s/^#//' /etc/raddb/mods-available/sql
 	sed -i '/login = "radius"/s/^#//' /etc/raddb/mods-available/sql
 	sed -i '/password = "radpass"/s/^#//' /etc/raddb/mods-available/sql
-	sed -i 's/password = "radpass"/password = "p0radius_0p"/g' /etc/raddb/mods-available/sql	
+	sed -i 's/password = "radpass"/password = "14WJnD8eMF6bBq"/g' /etc/raddb/mods-available/sql	
 	systemctl restart radiusd
 	sleep 3
 }
@@ -52,11 +52,11 @@ function set_daloradius4(){
 	chown -R apache:apache /var/www/html/daloradius/
 	chmod 664 /var/www/html/daloradius/library/daloradius.conf.php
 	cd /var/www/html/daloradius/
-	mysql -uradius -p'p0radius_0p' radius < contrib/db/fr2-mysql-daloradius-and-freeradius.sql
-	mysql -uradius -p'p0radius_0p' radius < contrib/db/mysql-daloradius.sql
+	mysql -uradius -p'14WJnD8eMF6bBq' radius < contrib/db/fr2-mysql-daloradius-and-freeradius.sql
+	mysql -uradius -p'14WJnD8eMF6bBq' radius < contrib/db/mysql-daloradius.sql
 	sleep 3
 	sed -i "s/\['CONFIG_DB_USER'\] = 'root'/\['CONFIG_DB_USER'\] = 'radius'/g"  /var/www/html/daloradius/library/daloradius.conf.php
-	sed -i "s/\['CONFIG_DB_PASS'\] = ''/\['CONFIG_DB_PASS'\] = 'p0radius_0p'/g" /var/www/html/daloradius/library/daloradius.conf.php
+	sed -i "s/\['CONFIG_DB_PASS'\] = ''/\['CONFIG_DB_PASS'\] = '14WJnD8eMF6bBq'/g" /var/www/html/daloradius/library/daloradius.conf.php
 	yum -y install epel-release
 	yum -y install php-pear-DB
 	systemctl restart mariadb.service 
@@ -75,7 +75,7 @@ function set_fix_radacct_table5(){
 	sleep 3
 	wget https://github.com/StevenWinsir/radius-ocserv/blob/master/radacct_new.sql.tar.gz?raw=true && mv radacct_new.sql.tar.gz?raw=true radacct_new.sql.tar.gz
 	tar xzvf radacct_new.sql.tar.gz
-	mysql -uradius -p'p0radius_0p' radius < /tmp/radacct_new.sql
+	mysql -uradius -p'14WJnD8eMF6bBq' radius < /tmp/radacct_new.sql
 	rm -rf radacct_new.sql.tar.gz
 	rm -rf radacct_new.sql
 	systemctl restart radiusd
@@ -86,18 +86,22 @@ cat >>  /etc/rc.local <<EOF
 systemctl start mariadb
 systemctl start httpd
 systemctl start radiusd
-iptables -I INPUT -p tcp --dport 9090 -j ACCEPT
+iptables -I INPUT -p tcp --dport 53680 -j ACCEPT
+firewall-cmd --permanent --add-port=53680/tcp
+firewall-cmd --reload
 EOF
 systemctl start mariadb
 systemctl start httpd
 systemctl start radiusd
-iptables -I INPUT -p tcp --dport 9090 -j ACCEPT
+iptables -I INPUT -p tcp --dport 53680 -j ACCEPT
+firewall-cmd --permanent --add-port=53680/tcp
+firewall-cmd --reload
 }
 
 function set_web_config7(){
 echo  "
-Listen 9090
-<VirtualHost *:9090>
+Listen 53680
+<VirtualHost *:53680>
  DocumentRoot "/var/www/html/daloradius"
  ServerName daloradius
  ErrorLog "logs/daloradius-error.log"
@@ -116,7 +120,7 @@ cd /usr/mysys/
 wget https://github.com/StevenWinsir/radius-ocserv/blob/master/dbback.tar.gz?raw=true && mv dbback.tar.gz?raw=true dbback.tar.gz
 tar xzvf dbback.tar.gz
 rm -rf dbback.tar.gz
-echo 'mysql -uradius -pp0radius_0p -e "UPDATE radius.radacct SET acctstoptime = acctstarttime + acctsessiontime WHERE ((UNIX_TIMESTAMP(acctstarttime) + acctsessiontime + 240 - UNIX_TIMESTAMP())<0) AND acctstoptime IS NULL;"' >> /usr/mysys/clearsession.sh
+echo 'mysql -uradius -p14WJnD8eMF6bBq -e "UPDATE radius.radacct SET acctstoptime = acctstarttime + acctsessiontime WHERE ((UNIX_TIMESTAMP(acctstarttime) + acctsessiontime + 240 - UNIX_TIMESTAMP())<0) AND acctstoptime IS NULL;"' >> /usr/mysys/clearsession.sh
 chmod +x /usr/mysys/clearsession.sh
 echo '0-59/10 * * * * /usr/mysys/clearsession.sh' >> /tmp/crontab.back
 echo '0 0 1 * * /usr/mysys/dbback/backup_radius_db.sh' >> /tmp/crontab.back
@@ -132,9 +136,9 @@ echo "==========================================================================
 										 
 				  以下信息将自动保存到/root/info.txt文件中			
           
-                   mysql root用户密码:0p0o0i0900
+                   mysql root用户密码:F8yX4eZNd7W26funF4
 
-		          VPN 账号管理后台地址：http://$public_ip:9090
+		          VPN 账号管理后台地址：http://$public_ip:53680
 		                             账号：administrator 密码:radius
 		                             
 		           如果采用radius认证，需要注释/etc/ocserv/ocserv.conf文件中的下面行密码认证行
