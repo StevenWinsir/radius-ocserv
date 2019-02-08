@@ -130,6 +130,10 @@ systemctl restart crond
 
 function set_radiusclient8(){
 	yum install radiusclient-ng -y
+	sed -i 's/auth = "plain[passwd=/etc/ocserv/ocpasswd]"/#auth = "plain[passwd=/etc/ocserv/ocpasswd]"/' /etc/ocserv/ocserv.conf
+	sed -i '/auth = "radius[config=/etc/radiusclient-ng/radiusclient.conf,groupconfig=true]"/s/^#//' /etc/ocserv/ocserv.conf
+	sed -i '/acct = "radius[config=/etc/radiusclient-ng/radiusclient.conf]"/s/^#//' /etc/ocserv/ocserv.conf
+	systemctl restart ocserv
 	echo "localhost testing123" >> /etc/radiusclient-ng/servers
 echo "==========================================================================
                   Centos7 VPN 安装完成                            
